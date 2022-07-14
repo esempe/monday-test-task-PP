@@ -1,29 +1,55 @@
-import React, {ChangeEvent, useState} from 'react';
+import React, {ChangeEvent, useEffect, useState} from 'react';
 import s from "../App.module.css";
 import {SettingType} from "../App";
+import {Button} from "./Button";
 
 type SettingsPropsType = {
-    valueMax:number
-    valueMin:number
-    dispatchMax:(value:number)=>void
-    dispatchMin:(value:number)=>void
+    valueMax: number
+    valueMin: number
+    error: string | null;
+    setError: (errorText:string | null)=> void;
+    setToLocalstorage: () => void;
+    dispatchMax: (value: number) => void
+    dispatchMin: (value: number) => void
+    //setSettingComplete:(value:boolean)=>void
 }
 
 export const Settings = (props: SettingsPropsType) => {
-/*    let [valueMax, setValueMax] = useState<number>(5)
-    let [valueMin, setValueMin] = useState<number>(0)*/
+    const [isSetDisabled, setDisableSet] = useState<boolean>(false)
+    useEffect(() => {
+        let maxValueAsString = localStorage.getItem('MaxValue')
+        let minValueAsString = localStorage.getItem('MinValue')
+        if (maxValueAsString && minValueAsString) {
+            //let newValue = JSON.parse(counterAsString)
+            /*            console.log(localStorage.getItem('counterValue'))
+                        setCounter(JSON.parse(counterAsString))*/
+            props.dispatchMax(JSON.parse(maxValueAsString))
+            props.dispatchMin(JSON.parse(minValueAsString))
+        }
+    }, [])
 
-/*    const onSetHandler = () => {
-        props.settingDispatch(props.valueMin,valueMax)
-        console.log(15)
-    }*/
+    const onSetHandler = () => {
+        props.setToLocalstorage();
+        setDisableSet(true)
+        props.setError(null)
+    }
     const onChangeMin = (e: ChangeEvent<HTMLInputElement>) => {
         props.dispatchMin(Number(e.currentTarget.value))
+        props.setError("Укажите настройки и нажмите SET")
+        setDisableSet(false)
     }
     const onChangeMax = (e: ChangeEvent<HTMLInputElement>) => {
         props.dispatchMax(Number(e.currentTarget.value))
+        props.setError("Укажите настройки и нажмите SET")
+        setDisableSet(false)
     }
-
+    if(props.valueMax === props.valueMin){
+        props.setError("Incorrect value")
+    } else if (props.valueMax < props.valueMin){
+        props.setError("Incorrect value")
+    } else if(props.valueMin < 0){
+        props.setError("Incorrect value")
+    }
 
     return (
         <div className={s.wrapper}>
@@ -43,9 +69,10 @@ export const Settings = (props: SettingsPropsType) => {
                 </div>
             </div>
             <div className={s.controlPanel}>
-                <button className={s.increment}>
+                <Button disabled={isSetDisabled} onClick={onSetHandler} className={s.increment}>
                     set
-                </button>
+                </Button>
+
             </div>
         </div>
     );

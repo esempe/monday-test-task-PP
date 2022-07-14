@@ -1,55 +1,81 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import s from "../App.module.css";
-import {SettingType} from "../App";
+import {Button} from "./Button";
 
 type CounterPropsType ={
     valueMin:number
     valueMax:number
+    counter:number
+    setCounter:(value:number)=>void;
+    error: string | null;
+
     //setting:SettingType
 }
 
 export const Counter = (props:CounterPropsType) => {
-    let [counter,setCounter] = useState<number>(props.valueMin)
+
+    useEffect(()=>{
+        let counterAsString = localStorage.getItem('counterValue')
+        if(counterAsString){
+            props.setCounter(JSON.parse(counterAsString))
+        }
+    },[])
+
+    useEffect(()=>{
+        localStorage.setItem('counterValue',JSON.stringify(props.counter))
+    },[props.counter])
 
     const onClickIncHandler = () => {
-        setCounter(state => state + 1)
+        props.setCounter(props.counter+1)
     }
+
     const onClickResetHandler = () => {
-        setCounter(props.valueMin)
+        props.setCounter(props.valueMin)
     }
     let valueStyle = {
-        fontSize: `${22 + 10*counter}px`,
         color:"#6EE4FF",
     }
 
-    let isDisabledRes = counter === props.valueMin
+    let isDisabledRes = props.counter === props.valueMin || props.error !== null
     let isDisabledInc:boolean
-    if (counter < props.valueMax){
+    if (props.counter < props.valueMax&& props.error == null){
         isDisabledInc = false
     } else {
         isDisabledInc = true
         valueStyle.color = 'red'
     }
-
+    switch (props.error) {
+        case "Укажите настройки и нажмите SET":{
+            valueStyle.color = '#6FE0F4'
+            break;
+        }
+        case "Incorrect value":{
+            valueStyle.color = 'red'
+            break;
+        }
+    }
+    //{counter}
     return (
         <div className={s.wrapper}>
             <div className={s.counter}>
                 <div style={valueStyle}>
-                    {counter}
+                    { props.error === null 
+                        ? props.counter :
+                        <div className={s.error}>{props.error}</div> }
                 </div>
             </div>
             <div className={s.controlPanel}>
-                <button onClick={onClickIncHandler}
+                <Button onClick={onClickIncHandler}
                         disabled={isDisabledInc}
                         className={s.increment}>
                     inc
-                </button>
-                <button onClick={onClickResetHandler}
+                </Button>
+                <Button onClick={onClickResetHandler}
                         disabled={isDisabledRes}
 
                         className={s.reset}>
                     reset
-                </button>
+                </Button>
             </div>
         </div>
     );
